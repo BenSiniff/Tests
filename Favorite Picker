@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="initial-scale=1.0">
+<title>Picker</title>
+<style>
+body {
+    background:#FFF;
+    color:#000;
+    font-family:verdana, sans-serif;
+    font-size:10pt;
+    margin:0;
+    padding:10px;
+}
+
+a:link, a:visited {
+    color:#008;
+    font-weight:bold;
+    text-decoration:none;
+}
+
+a:active, a:hover {
+    color:#ACF;
+}
+
+.info {
+    font-weight:bold;
+}
+
+button {
+    font-family:inherit;
+    cursor:pointer;
+    border:0;
+    border-radius:3px;
+    padding:0.3em 0.5em;
+    background:#CCC;
+    color:#000;
+}
+
+button:hover {
+    background:#DDD;
+}
+
+button.disabled {
+    background:#DDD;
+    color:#888;
+    cursor:not-allowed;
+}
+
+button.disabled:hover {
+    background:#DDD;
+}
+
+#container {
+    position:relative;
+    margin-left:-10px;
+    margin-right:-10px;
+    padding:10px;
+    overflow:hidden;
+}
+
+@media (min-width:1024px) {
+    /* Put the found favorites beside the picking div when the window is sufficiently large */
+    #picking {
+        float:left;
+        width:636px;
+    }
+
+    #secondary {
+        margin-left:646px;
+    }
+}
+
+@media (min-width:1300px) {
+    /* Once we get to the point where 636px is less than half of the width of the screen, make the picking div just take up half */
+    #picking {
+        width:50%;
+    }
+
+    #secondary {
+        margin-left:51%;
+    }
+}
+
+#pick {
+    background:#58F;
+    color:#FFF;
+    font-size:larger;
+    font-weight:bold;
+    width:6em;
+    border-radius:5px;
+    margin-right:10px;
+}
+
+#pick.disabled {
+    background:#ACF;
+}
+
+#pick:hover {
+    background:#ACF;
+}
+
+.item-list {
+    padding:0;
+    list-style-type:none;
+    line-height:100px;
+}
+
+.item-list li {
+    margin:0;
+    display:inline-block;
+    height:100px;
+    width:100px;
+    line-height:100px;
+    border:3px solid transparent;
+    text-align:center;
+    position:relative;
+    vertical-align:top;
+    overflow:hidden;
+    border-radius:100%;
+    background:#F7F7F7;
+    color:#000;
+}
+
+.item-list li img {
+    vertical-align:middle;
+    max-height:100%;
+    max-width:100%;
+}
+
+.item-list li span {
+    display:inline-block;
+    vertical-align:middle;
+    line-height:1.2;
+}
+
+@media (max-width:636px) {
+    .item-list {
+        line-height:75px;
+    }
+
+    .item-list li {
+        line-height:75px;
+        height:75px;
+        width:75px;
+    }
+}
+
+@media (max-width:423px) {
+    .item-list {
+        line-height:50px;
+    }
+
+    .item-list li {
+        line-height:50px;
+        height:50px;
+        width:50px;
+    }
+}
+
+#evaluating li {
+    cursor:pointer;
+}
+
+#favorites li {
+    cursor:move;
+}
+
+.item-list li:hover {
+    background:#CDF;
+}
+
+.item-list.sorting li:hover {
+    background:#F7F7F7;
+}
+
+#evaluating li.selected {
+    border:3px solid #7AC;
+}
+
+#evaluating, #buttons {
+    text-align:center;
+    margin:auto;
+}
+
+#evaluating li.notice {
+    width:auto;
+    height:auto;
+    max-width:260px;
+    margin:auto;
+    background:#F7F7F7;
+    border-radius:10px;
+    padding:30px 30px;
+    color:#000;
+    text-align:center;
+    line-height:1.4;
+    cursor:auto;
+    font-size:10pt;
+}
+
+#buttons {
+    margin-top:30px;
+    position:relative;
+    z-index:3;
+}
+</style>
+</head>
+<body>
+<h1>Picker</h1>
+
+<p>You can include any content you want here.</p>
+
+<div id="container">
+
+<div id="picking">
+<ul id="evaluating" class="item-list">
+</ul>
+
+<p id="buttons"><button id="pick">Pick</button> <button id="pass">Pass</button> <button id="undo">Undo</button> <button id="redo">Redo</button></p>
+</div>
+
+<div id="secondary">
+<h2>Found favorites</h2>
+
+<ol id="favorites" class="item-list">
+</ol>
+</div>
+</div>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="picker.js"></script>
+<script src="picker-ui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.7.0/Sortable.min.js"></script>
+<script>
+'use strict';
+
+var items = [{id: 'the-telltale-head'},{id: 'bart-gets-an-f'},{id: 'one-fish-two-fish-blowfish-blue-fish'},{id: 'lisas-substitute'},{id: 'the-way-we-was'},
+{id: 'when-flanders-failed'},{id: 'i-married-marge'},{id: 'the-last-temptation-of-homer'},{id: 'lisa-on-ice'},{id: 'and-maggie-makes-three'},
+{id: 'lisas-wedding'},{id: 'mother-simpson'},{id: 'lisa-the-iconoclast'},{id: 'summer-of-4-ft-2'},{id: 'the-secret-war-of-lisa-simpson'},
+{id: 'lisas-sax'},{id: 'girly-edition'},{id: 'bart-the-mother'},{id: 'days-of-wine-and-dohses'},{id: 'the-blunder-years'},
+{id: 'the-blunder-years'},{id: 'bart-vs-lisa-vs-the-third-grade'},{id: 'moe-baby-blues'},{id: 'my-mother-the-carjacker'},{id: 'i-doh-bot'},
+{id: 'milhouse-doesnt-live-here-anymore'},{id: 'the-way-we-werent'},{id: 'future-drama'},{id: 'the-boys-of-bummer'},{id: 'eternal-moonshine-ofthe-simpson-mind'},
+{id: 'mona-leaves-a'},{id: 'take-my-life-please'},{id: 'the-color-yellow'},{id: 'moe-letter-blues'},{id: 'how-i-wet-your-mother'},
+{id: 'the-kids-are-all-fight'},{id: 'barthood'},{id: 'fatzcarraldo'},{id: 'forgive-and-regret'},{id: 'lisas-belly'},
+{id: 'bartless'},{id: 'homr'},{id: 'see-homer-run'},{id: 'moms-id-like-to-forget'},{id: 'to-cur-with-love'},
+{id: 'brick-like-me'},{id: 'mad-about-the-toy'},{id: 'bart-the-bad-guy'},{id: 'diary-queen'},{id: 'clan-ofthe-cave-mom'},
+{id: 'simpsons-roasting-on-an-open-fire'},{id: 'two-cars-in-every-garage-and-three-eyes-on-every-fish'},{id: 'bart-the-daredevil'},{id: 'black-widower'},{id: 'marge-vs-the-monorail'},
+{id: 'homers-barbershop-quartet'},{id: 'cape-feare-'},{id: 'sideshow-bob-roberts'},{id: 'homer-the-great'},{id: 'lemon-of-troy'},
+{id: 'who-shot-mr-burns'},{id: 'twenty-two-short-films-about-springfield'},{id: 'the-curse-ofthe-flying-hellfsh'},{id: 'brother-from-another-series'},{id: 'the-wizard-of-evergreen-terrace'},
+{id: 'mom-and-pop-art'},{id: 'e-i-e-i-doh'},{id: 'grift-ofthe-magi'},{id: 'a-tale-of-two-springfields'},{id: 'skinners-sense-of-snow'},
+{id: 'pokey-mom'},{id: 'day-ofthe-jackanapes'},{id: 'the-lastest-gun-in-the-west'},{id: 'pranksta-rap'},{id: 'the-italian-bob'},
+{id: 'the-monkey-suit'},{id: 'twenty-four-minutes'},{id: 'funeral-for-a-fiend'},{id: 'apocalypse-cow'},{id: 'rednecks-and-broomsticks'},
+{id: ''the-bob-next-door},{id: 'bart-stops-to-smell-the-roosevelts'},{id: 'holidays-of-future-passed'},{id: 'dark-knight-court'},{id: 'the-saga-of-carl'},
+{id: 'the-man-who-grew-too-much'},{id: 'days-of-future-future'},{id: 'the-simpsons-guy'},{id: 'the-man-who-came-to-be-dinner'},{id: 'the-girl-code'},
+{id: 'the-cad-and-the-cat'},{id: 'the-serfsons'},{id: 'mr-lisas-opus'},{id: 'the-clown-stays-in-the-picture'},{id: 'manger-things'},
+{id: 'a-serious-flanders'},{id: 'pixelated-and-afraid'},{id: 'not-it'},{id: 'homers-adventure-through-the-windshield-glass'},{id: 'do-the-wrong-thing'}
+];
+
+var myPicker = new picker.Picker({
+    items: items
+});
+
+var pickerUI = new PickerUI(myPicker, {
+    elements: {
+        pick: "#pick",
+        pass: "#pass",
+        undo: "#undo",
+        redo: "#redo",
+        evaluating: "#evaluating",
+        favorites: "#favorites"
+    }
+});
+
+pickerUI.initialize();
+
+/* Sortable favorites - you can safely remove this, and the Sortable.min.js script, if you don't want to be able to sort your favorite list. */
+var sortable = new Sortable(pickerUI.elem.favorites.get(0), {
+    draggable: '.item',
+    animation: 100,
+    onStart: function() {
+        pickerUI.elem.favorites.addClass("sorting");
+    },
+    onEnd: function() {
+        pickerUI.elem.favorites.removeClass("sorting");
+    },
+    onUpdate: function() {
+        myPicker.setFavorites(pickerUI.elem.favorites.children().map(function() {
+            return pickerUI.getItem(this);
+        }).get());
+        pickerUI.update(true);
+    }
+});
+/* End sortable favorites */
+</script>
+</body>
+</html>
